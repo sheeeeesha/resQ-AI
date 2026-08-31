@@ -300,6 +300,44 @@ async function main(): Promise<void> {
     return;
   }
 
+  /*
+   * Unlabelled drafts are refused outright.
+   *
+   * `import-legacy` writes real transcripts with NEEDS_LABEL in every expected
+   * field, because a case cannot be labelled by the model it is meant to
+   * evaluate — that measures the model against its own opinions and marks
+   * every mistake correct by definition.
+   *
+   * Refusing here rather than skipping is deliberate. Silently ignoring them
+   * would produce a clean-looking run over whichever cases happened to be
+   * finished, and the number would not say which.
+   */
+  const unlabelled = parsed.data.cases.filter(
+    (c) =>
+      c.tests === "NEEDS_LABEL" ||
+      (c.expect.incident_type as string) === "NEEDS_LABEL" ||
+      c.tags.includes("needs-label"),
+  );
+
+  if (unlabelled.length > 0) {
+    console.error(
+      `${unlabelled.length} of ${parsed.data.cases.length} cases are unlabelled drafts:\n`,
+    );
+    for (const draft of unlabelled.slice(0, 10)) {
+      console.error(`  ${draft.id}`);
+    }
+    if (unlabelled.length > 10) {
+      console.error(`  … and ${unlabelled.length - 10} more`);
+    }
+    console.error(
+      `\nA case needs a label from someone who knows what a call-taker would\n` +
+        `decide. Do not fill these in with the model: the harness would then be\n` +
+        `measuring it against itself.`,
+    );
+    process.exitCode = 1;
+    return;
+  }
+
   const cases = options.tagFilter
     ? parsed.data.cases.filter((c) => c.tags.includes(options.tagFilter!))
     : parsed.data.cases;

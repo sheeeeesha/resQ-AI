@@ -23,7 +23,8 @@
     "console": "npm run dev --workspace @resqai/console",
     "eval": "npm run eval --workspace @resqai/api --",
     "retention": "npm run retention --workspace @resqai/api --",
-    "operators": "npm run operators --workspace @resqai/api --"
+    "operators": "npm run operators --workspace @resqai/api --",
+    "eval:import": "npm run eval:import --workspace @resqai/api --"
   },
   "engines": {
     "node": ">=20.11"

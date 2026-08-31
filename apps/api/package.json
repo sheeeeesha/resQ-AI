@@ -17,7 +17,8 @@
     "db:seed-units": "node --env-file-if-exists=.env dist/db/seed-units.js",
     "eval": "node --env-file-if-exists=.env dist/eval/run.js",
     "retention": "node --env-file-if-exists=.env dist/retention/cli.js",
-    "operators": "node --env-file-if-exists=.env dist/auth/cli.js"
+    "operators": "node --env-file-if-exists=.env dist/auth/cli.js",
+    "eval:import": "node dist/eval/import-legacy.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",
