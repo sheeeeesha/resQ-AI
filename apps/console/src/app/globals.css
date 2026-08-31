@@ -1,0 +1,197 @@
+@import "tailwindcss";
+
+/**
+ * Design tokens. See DESIGN.md at the repo root for the reasoning.
+ *
+ * The rule everything follows: chroma encodes whether something is data.
+ * Below 0.03 is chrome; above 0.10 is a status value; violet is interaction.
+ * Red appears on this screen only when something is immediately
+ * life-threatening.
+ */
+@theme {
+  /* Chrome — near-neutral slate, chroma below 0.02 */
+  --color-bg: oklch(0.17 0.012 265);
+  --color-surface: oklch(0.21 0.014 265);
+  --color-raised: oklch(0.25 0.016 265);
+  --color-border: oklch(0.32 0.014 265);
+  --color-border-strong: oklch(0.42 0.016 265);
+
+  /* Text. --color-faint is the floor at 4.6:1, not a decorative grey. */
+  --color-ink: oklch(0.96 0.004 265);
+  --color-muted: oklch(0.76 0.01 265);
+  --color-faint: oklch(0.62 0.012 265);
+
+  /* Interaction only. Violet is the one hue emergency semantics has not
+     already claimed, so selection never competes with status. */
+  --color-accent: oklch(0.62 0.19 295);
+  --color-accent-hover: oklch(0.68 0.19 295);
+  --color-accent-muted: oklch(0.32 0.09 295);
+  --color-accent-ink: oklch(0.99 0.005 295);
+
+  /* Priority — ordinal. Hue rotates and chroma falls as urgency drops. */
+  --color-p0: oklch(0.64 0.23 25);
+  --color-p1: oklch(0.72 0.18 55);
+  --color-p2: oklch(0.8 0.15 95);
+  --color-p3: oklch(0.7 0.12 195);
+  --color-p4: oklch(0.62 0.03 265);
+
+  /* Status. --color-danger is deliberately identical to --color-p0: two
+     near-identical reds is how a palette teaches people to stop reading red. */
+  --color-ok: oklch(0.72 0.16 150);
+  --color-warn: oklch(0.78 0.15 75);
+  --color-danger: oklch(0.64 0.23 25);
+
+  --font-sans:
+    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
+
+  /* Fixed scale, ratio 1.2. Users are at consistent DPI on fixed monitors;
+     a heading that resizes with its panel looks broken, not responsive. */
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+
+  /* Semantic z-scale. Never an arbitrary 9999. */
+  --z-sticky: 10;
+  --z-drawer: 20;
+  --z-overlay: 30;
+  --z-dialog: 40;
+}
+
+* {
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  /* Numbers must not shift column position between rows. A call-taker
+     scanning a queue reads down the digits. */
+  font-variant-numeric: tabular-nums;
+}
+
+/**
+ * Focus is never suppressed.
+ *
+ * A call-taker should be able to work this console without their hands
+ * leaving the keyboard, which requires always being able to see where they
+ * are. `:focus-visible` keeps the ring off mouse clicks.
+ */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+::selection {
+  background: var(--color-accent-muted);
+  color: var(--color-ink);
+}
+
+/* Scrollbars styled to match the chrome rather than punching white holes in
+   a dark surface. Sized like native ones, not reinvented. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+
+/**
+ * Leaflet overrides.
+ *
+ * Leaflet ships a light grey container background, light popups and a white
+ * zoom control — sensible defaults for a light page and wrong here. Left alone
+ * they punch bright holes in a console built for a dim room, and they show
+ * through as a grey rectangle for the moment before tiles paint.
+ */
+.leaflet-container {
+  background: var(--color-bg);
+  font-family: var(--font-sans);
+}
+
+/**
+ * Darkens the light OSM tiles.
+ *
+ * Inverting flips white paper to near-black and black ink to near-white;
+ * rotating the hue 180 degrees puts the greens and blues back where they
+ * belong rather than leaving parks magenta. The brightness and contrast trims
+ * stop the result glowing against the surrounding chrome.
+ *
+ * Applied only to the tile layer — markers, circles and tooltips sit above it
+ * and keep their own colours, which matters because those colours are the
+ * status vocabulary and must not be inverted with the basemap.
+ */
+.leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.88)
+    saturate(0.75);
+}
+
+.leaflet-control-zoom a,
+.leaflet-control-attribution {
+  background: var(--color-surface) !important;
+  color: var(--color-faint) !important;
+  border-color: var(--color-border) !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background: var(--color-raised) !important;
+  color: var(--color-ink) !important;
+}
+
+.leaflet-control-attribution a {
+  color: var(--color-muted) !important;
+}
+
+.leaflet-tooltip {
+  background: var(--color-raised) !important;
+  color: var(--color-ink) !important;
+  border: 1px solid var(--color-border) !important;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.5) !important;
+  font-size: var(--text-xs);
+}
+
+.leaflet-tooltip-top::before {
+  border-top-color: var(--color-border) !important;
+}
+
+/**
+ * The one attention-seeking movement in the interface.
+ *
+ * A newly arrived incident decays from a highlight so a call-taker who
+ * glanced away can see something changed. This is motion carrying
+ * information, not decoration.
+ */
+@keyframes arrive {
+  from {
+    background-color: var(--color-accent-muted);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+.animate-arrive {
+  animation: arrive 2.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
