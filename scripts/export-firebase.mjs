@@ -26,13 +26,25 @@ import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
 
-// firebase-admin is already present in the legacy backend's dependencies.
+/*
+ * firebase-admin is already committed under the legacy backend, so this looks
+ * there before asking for an install. That directory is on its way out, but
+ * while it exists there is no reason to make someone download a second copy of
+ * a package the repository already contains.
+ */
 let admin;
-try {
-  admin = require("firebase-admin");
-} catch {
+for (const specifier of ["firebase-admin", "../backend/node_modules/firebase-admin"]) {
+  try {
+    admin = require(specifier);
+    break;
+  } catch {
+    // Try the next location.
+  }
+}
+
+if (!admin) {
   console.error(
-    "firebase-admin not found. Run this from the repo root after:\n" +
+    "firebase-admin not found. From the repo root:\n" +
       "  npm install firebase-admin --no-save",
   );
   process.exit(1);

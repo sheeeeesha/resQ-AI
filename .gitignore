@@ -30,3 +30,15 @@ coverage/
 # Evaluation runs are generated artefacts, reproducible with `npm run eval`.
 # The findings that matter are written up in docs/setup.md.
 apps/api/eval/results/
+
+# Firebase service account keys. Unlike the web API key (a public identifier),
+# these grant full project access — never commit one.
+service-account*.json
+firebase-adminsdk*.json
+*-firebase-adminsdk-*.json
+gcp-credentials*.json
+
+# The legacy export itself: real caller transcripts, and therefore personal
+# data under the DPDP Act. Kept locally for seeding and evaluation, never
+# pushed to a remote.
+data/legacy/
