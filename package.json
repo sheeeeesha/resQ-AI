@@ -1,0 +1,31 @@
+{
+  "name": "resqai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI-assisted emergency call intake and triage for ERSS-112",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "migrate": "npm run migrate --workspace @resqai/api",
+    "db:setup": "psql -U postgres -h localhost -f scripts/setup-db.sql",
+    "db:check": "npm run db:check --workspace @resqai/api",
+    "db:password": "node scripts/set-db-password.mjs",
+    "db:salt": "node scripts/generate-salt.mjs",
+    "db:smoke": "npm run db:smoke --workspace @resqai/api",
+    "extraction:probe": "npm run extraction:probe --workspace @resqai/api",
+    "set-secret": "node scripts/set-secret.mjs",
+    "db:seed-units": "npm run db:seed-units --workspace @resqai/api",
+    "console": "npm run dev --workspace @resqai/console",
+    "eval": "npm run eval --workspace @resqai/api --",
+    "retention": "npm run retention --workspace @resqai/api --",
+    "operators": "npm run operators --workspace @resqai/api --"
+  },
+  "engines": {
+    "node": ">=20.11"
+  }
+}

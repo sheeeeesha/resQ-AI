@@ -1,0 +1,676 @@
+{
+  "name": "ResQ AI core evaluation set",
+  "version": "1.0.0",
+  "cases": [
+    {
+      "id": "hinglish-fire-child",
+      "tests": "Baseline Hinglish structure fire with a trapped child. Should route fire and children, and escalate on both life threat and child.",
+      "tags": [
+        "hinglish",
+        "fire",
+        "baseline"
+      ],
+      "channel": "whatsapp",
+      "utterances": [
+        {
+          "text": "bhai jaldi aao! building mein aag lag gayi hai"
+        },
+        {
+          "text": "teesri manzil par do log phanse hain, ek bachcha bhi hai andar"
+        }
+      ],
+      "expect": {
+        "incident_type": "fire_structure",
+        "priority": "P0_immediate",
+        "required_agencies": [
+          "fire",
+          "children"
+        ],
+        "required_escalations": [
+          "life_threat_indicated",
+          "child_involved"
+        ],
+        "life_threat": true,
+        "location_unresolvable": true
+      }
+    },
+    {
+      "id": "negation-no-fire",
+      "tests": "Negation. The caller explicitly says there is NO fire. Keyword matching classifies this as a fire; a reading model should not.",
+      "tags": [
+        "negation",
+        "adversarial"
+      ],
+      "channel": "whatsapp",
+      "utterances": [
+        {
+          "text": "koi aag nahi lagi hai, sirf dhuan aa raha tha lekin ab band ho gaya"
+        },
+        {
+          "text": "main sirf poochhna chahta tha ki kya karna chahiye"
+        }
+      ],
+      "expect": {
+        "incident_type": "other",
+        "acceptable_types": [
+          "unclear",
+          "gas_leak"
+        ],
+        "priority": "P4_referral",
+        "acceptable_priorities": [
+          "P3_routine"
+        ],
+        "life_threat": false,
+        "location_unresolvable": true
+      }
+    },
+    {
+      "id": "landmark-only-location",
+      "tests": "Location stated only as a relational landmark. The place name must survive verbatim; a translated 'Shiva temple' is useless to a dispatcher.",
+      "tags": [
+        "location",
+        "hinglish",
+        "landmark"
+      ],
+      "channel": "whatsapp",
+      "utterances": [
+        {
+          "text": "ORR ke paas Shiv Mandir ke peeche accident hua hai"
+        },
+        {
+          "text": "do teen log ghayal hain, bahut khoon beh raha hai"
+        }
+      ],
+      "expect": {
+        "incident_type": "road_traffic_accident",
+        "acceptable_types": [
+          "medical_trauma"
+        ],
+        "priority": "P0_immediate",
+        "acceptable_priorities": [
+          "P1_urgent"
+        ],
+        "required_agencies": [
+          "health"
+        ],
+        "required_escalations": [
+          "life_threat_indicated"
+        ],
+        "life_threat": true,
+        "must_preserve": [
+          "Shiv Mandir",
+          "ORR"
+        ],
+        "location_unresolvable": true
+      }
+    },
+    {
+      "id": "caller-is-victim",
+      "tests": "The caller is themselves injured. Must escalate on caller_is_involved — someone describing their own emergency cannot be expected to answer structured questions.",
+      "tags": [
+        "caller-role",
+        "escalation"
+      ],
+      "channel": "voice",
+      "utterances": [
+        {
+          "text": "mujhe bachao, main gir gaya hoon, mera pair toot gaya hai",
+          "asr_confidence": 0.82
+        },
+        {
+          "text": "hil nahi pa raha hoon, bahut dard ho raha hai",
+          "asr_confidence": 0.79
+        }
+      ],
+      "expect": {
+        "incident_type": "medical_trauma",
+        "priority": "P1_urgent",
+        "acceptable_priorities": [
+          "P0_immediate",
+          "P2_prompt"
+        ],
+        "required_agencies": [
+          "health"
+        ],
+        "required_escalations": [
+          "caller_is_involved"
+        ],
+        "life_threat": false,
+        "location_unresolvable": true
+      }
+    },
+    {
+      "id": "too-vague-to-classify",
+      "tests": "Genuinely insufficient information. The correct answer is unclear. A set without cases like this rewards a model that never admits uncertainty.",
+      "tags": [
+        "ambiguity",
+        "unclear-expected"
+      ],
+      "channel": "sms",
+      "utterances": [
+        {
+          "text": "help"
+        }
+      ],
+      "expect": {
+        "incident_type": "unclear",
+        "priority": "unclear",
+        "required_escalations": [
+          "low_confidence"
+        ],
+        "life_threat": false,
+        "location_unresolvable": true
+      }
+    },
+    {
+      "id": "cardiac-agonal-breathing",
+      "tests": "Caller describes gasping as 'breathing'. Agonal respiration is a well-known cause of missed cardiac arrest; the system must not read it as adequate breathing.",
+      "tags": [
+        "medical",
+        "clinical",
+        "adversarial"
+      ],
+      "channel": "voice",
+      "utterances": [
+        {
+          "text": "papa ko chest mein bahut dard ho raha tha, ab gir gaye hain",
+          "asr_confidence": 0.88
+        },
+        {
+          "text": "saans le rahe hain lekin ajeeb awaaz aa rahi hai, jaise gasp kar rahe hon",
+          "asr_confidence": 0.84
+        }
+      ],
+      "expect": {
+        "incident_type": "medical_cardiac",
+        "acceptable_types": [
+          "medical_breathing",
+          "medical_unconscious"
+        ],
+        "priority": "P0_immediate",
+        "required_agencies": [
+          "health"
+        ],
+        "required_escalations": [
+          "life_threat_indicated"
+        ],
+        "life_threat": true,
+        "location_unresolvable": true
+      }
+    },
+    {
+      "id": "under-triage-trap",
+      "tests": "Sounds mild, is serious. A calm caller describing a small child who fell from a height. Under-triage here is the failure mode that matters.",
+      "tags": [
+        "adversarial",
+        "under-triage",
+        "children"
+      ],
+      "channel": "whatsapp",
+      "utterances": [
+        {
+          "text": "hello, sorry to bother you. my daughter fell from the balcony"
+        },
+        {
+          "text": "she is two years old. she is awake but not really responding properly"
+        }
+      ],
+      "expect": {
+        "incident_type": "medical_trauma",
+        "acceptable_types": [
+          "medical_unconscious"
+        ],
+        "priority": "P0_immediate",
+        "acceptable_priorities": [
+          "P1_urgent"
+        ],
+        "required_agencies": [
+          "health",
+          "children"
+        ],
+        "required_escalations": [
+          "child_involved"
+        ],
+        "life_threat": true,
+        "location_unresolvable": true
+      }
+    },
+    {
+      "id": "over-triage-trap",
+      "tests": "Sounds dramatic, is routine. Emotional language about a minor incident. Over-triage wastes a vehicle that something else needed.",
+      "tags": [
+        "adversarial",
+        "over-triage"
+      ],
+      "channel": "whatsapp",
+      "utterances": [
+        {
+          "text": "emergency! emergency! bahut bura hua hai!"
+        },
+        {
+          "text": "meri scooty ko kisi ne tokar mari aur bhaag gaya, koi chot nahi lagi lekin FIR karni hai"
+        }
+      ],
+      "expect": {
+        "incident_type": "road_traffic_accident",
+        "acceptable_types": [
+          "other",
+          "crime_theft_robbery"
+        ],
+        "priority": "P3_routine",
+        "acceptable_priorities": [
+          "P2_prompt",
+          "P4_referral"
+        ],
+        "required_agencies": [
+          "police"
+        ],
+        "life_threat": false,
+        "location_unresolvable": true
+      }
+    },
+    {
+      "id": "devanagari-native",
+      "tests": "Native Devanagari rather than romanised. Script must not affect classification quality.",
+      "tags": [
+        "devanagari",
+        "language"
+      ],
+      "channel": "whatsapp",
+      "utterances": [
+        {
+          "text": "आग लग गई है, जल्दी मदद भेजो",
+          "language": "hi"
+        },
+        {
+          "text": "दूसरी मंजिल पर धुआं भर गया है, लोग फंसे हुए हैं",
+          "language": "hi"
+        }
+      ],
+      "expect": {
+        "incident_type": "fire_structure",
+        "priority": "P0_immediate",
+        "acceptable_priorities": [
+          "P1_urgent"
+        ],
+        "required_agencies": [
+          "fire"
+        ],
+        "required_escalations": [
+          "life_threat_indicated"
+        ],
+        "life_threat": true,
+        "must_preserve": [
+          "आग"
+        ],
+        "location_unresolvable": true
+      }
+    },
+    {
+      "id": "domestic-violence",
+      "tests": "Routes the women lane, and the caller is the victim. Both must be caught; a system that only classifies assault has under-served this call.",
+      "tags": [
+        "women",
+        "caller-role",
+        "sensitive"
+      ],
+      "channel": "whatsapp",
+      "utterances": [
+        {
+          "text": "mera pati mujhe maar raha hai, main darr gayi hoon"
+        },
+        {
+          "text": "main bathroom mein chhupi hui hoon, woh darwaza tod raha hai"
+        }
+      ],
+      "expect": {
+        "incident_type": "crime_domestic_violence",
+        "acceptable_types": [
+          "crime_assault"
+        ],
+        "priority": "P0_immediate",
+        "acceptable_priorities": [
+          "P1_urgent"
+        ],
+        "required_agencies": [
+          "police",
+          "women"
+        ],
+        "required_escalations": [
+          "caller_is_involved",
+          "life_threat_indicated"
+        ],
+        "life_threat": true,
+        "location_unresolvable": true
+      }
+    },
+    {
+      "id": "poor-audio-degraded",
+      "tests": "Voice call with poor recognition confidence throughout. Must escalate on audio quality rather than silently producing a confident classification from unreliable text.",
+      "tags": [
+        "voice",
+        "asr-quality",
+        "escalation"
+      ],
+      "channel": "voice",
+      "utterances": [
+        {
+          "text": "aag ... nahi ... sun ... raha",
+          "asr_confidence": 0.38
+        },
+        {
+          "text": "kuch ... samajh ... nahi",
+          "asr_confidence": 0.34
+        }
+      ],
+      "expect": {
+        "incident_type": "unclear",
+        "acceptable_types": [
+          "fire_structure",
+          "other"
+        ],
+        "priority": "unclear",
+        "acceptable_priorities": [
+          "P1_urgent",
+          "P2_prompt"
+        ],
+        "required_escalations": [
+          "asr_quality_poor"
+        ],
+        "life_threat": false,
+        "location_unresolvable": true
+      }
+    },
+    {
+      "id": "contradictory-account",
+      "tests": "The caller contradicts themselves about how many people are hurt. The system should surface the contradiction rather than silently picking one number.",
+      "tags": [
+        "adversarial",
+        "contradiction"
+      ],
+      "channel": "whatsapp",
+      "utterances": [
+        {
+          "text": "accident hua hai, ek aadmi ghayal hai"
+        },
+        {
+          "text": "nahi nahi, teen chaar log hain, main theek se dekh nahi pa raha"
+        }
+      ],
+      "expect": {
+        "incident_type": "road_traffic_accident",
+        "priority": "P1_urgent",
+        "acceptable_priorities": [
+          "P0_immediate",
+          "P2_prompt"
+        ],
+        "required_agencies": [
+          "health"
+        ],
+        "life_threat": false,
+        "location_unresolvable": true
+      }
+    },
+    {
+      "id": "gas-cylinder-hazard",
+      "tests": "A hazard that changes how responders approach the scene. Missing hazard_indicated puts a crew at risk.",
+      "tags": [
+        "hazard",
+        "fire"
+      ],
+      "channel": "whatsapp",
+      "utterances": [
+        {
+          "text": "gas cylinder phat gaya hai kitchen mein, aag lagi hui hai"
+        },
+        {
+          "text": "do aur cylinder rakhe hain paas mein, jaldi aao"
+        }
+      ],
+      "expect": {
+        "incident_type": "gas_leak",
+        "acceptable_types": [
+          "fire_structure",
+          "fire_other"
+        ],
+        "priority": "P0_immediate",
+        "required_agencies": [
+          "fire"
+        ],
+        "required_escalations": [
+          "hazard_indicated",
+          "life_threat_indicated"
+        ],
+        "life_threat": true,
+        "location_unresolvable": true
+      }
+    },
+    {
+      "id": "plus-code-location",
+      "tests": "Caller supplies a Plus Code. It must survive verbatim so the offline decoder can resolve it — this is the one location path that works with no network. Life threat is left open: an injured motorcyclist is defensibly either.",
+      "tags": [
+        "location",
+        "plus-code"
+      ],
+      "channel": "whatsapp",
+      "utterances": [
+        {
+          "text": "accident ho gaya hai, hum yahan hain 7J9W9F6F+JV"
+        },
+        {
+          "text": "ek bike aur car ki takkar hui hai, rider ghayal hai"
+        }
+      ],
+      "expect": {
+        "incident_type": "road_traffic_accident",
+        "priority": "P1_urgent",
+        "acceptable_priorities": [
+          "P0_immediate",
+          "P2_prompt"
+        ],
+        "required_agencies": [
+          "health"
+        ],
+        "must_preserve": [
+          "7J9W9F6F+JV"
+        ],
+        "life_threat": false,
+        "location_unresolvable": false,
+        "life_threat_ambiguous": true
+      }
+    },
+    {
+      "id": "non-emergency-referral",
+      "tests": "Not an emergency at all. Should route to referral rather than consuming a response unit.",
+      "tags": [
+        "referral",
+        "over-triage"
+      ],
+      "channel": "web",
+      "utterances": [
+        {
+          "text": "I want to know how to get a copy of an FIR filed last month"
+        }
+      ],
+      "expect": {
+        "incident_type": "other",
+        "acceptable_types": [
+          "unclear"
+        ],
+        "priority": "P4_referral",
+        "acceptable_priorities": [
+          "P3_routine"
+        ],
+        "life_threat": false,
+        "location_unresolvable": true
+      }
+    },
+    {
+      "id": "drowning-children",
+      "tests": "Multiple children in water. Time-critical, and the children lane must route regardless of incident type.",
+      "tags": [
+        "children",
+        "drowning",
+        "life-threat"
+      ],
+      "channel": "voice",
+      "utterances": [
+        {
+          "text": "do bachche talaab mein doob rahe hain, jaldi aao",
+          "asr_confidence": 0.91
+        },
+        {
+          "text": "koi tair nahi paa raha, paani bahut gehra hai",
+          "asr_confidence": 0.87
+        }
+      ],
+      "expect": {
+        "incident_type": "drowning",
+        "priority": "P0_immediate",
+        "required_agencies": [
+          "disaster",
+          "children"
+        ],
+        "required_escalations": [
+          "life_threat_indicated",
+          "child_involved",
+          "hazard_indicated"
+        ],
+        "life_threat": true,
+        "location_unresolvable": true
+      }
+    },
+    {
+      "id": "structural-collapse-multi",
+      "tests": "Building collapse with an unknown casualty count. People affected should be a range or unstated, never a fabricated precise number.",
+      "tags": [
+        "disaster",
+        "people-count"
+      ],
+      "channel": "whatsapp",
+      "utterances": [
+        {
+          "text": "purani building gir gayi hai, bahut log andar the"
+        },
+        {
+          "text": "pata nahi kitne log hain, malba hi malba hai"
+        }
+      ],
+      "expect": {
+        "incident_type": "structural_collapse",
+        "priority": "P0_immediate",
+        "required_agencies": [
+          "disaster"
+        ],
+        "required_escalations": [
+          "life_threat_indicated"
+        ],
+        "life_threat": true,
+        "location_unresolvable": true
+      }
+    },
+    {
+      "id": "english-clear-electrocution",
+      "tests": "Plain English with an electrical hazard. Responders must not touch the casualty until power is isolated, so the hazard has to be flagged.",
+      "tags": [
+        "english",
+        "hazard"
+      ],
+      "channel": "web",
+      "utterances": [
+        {
+          "text": "A man touched a live wire near the transformer and collapsed"
+        },
+        {
+          "text": "He is not moving. The wire is still sparking, nobody can reach him"
+        }
+      ],
+      "expect": {
+        "incident_type": "electrocution",
+        "acceptable_types": [
+          "medical_unconscious"
+        ],
+        "priority": "P0_immediate",
+        "required_agencies": [
+          "health"
+        ],
+        "required_escalations": [
+          "life_threat_indicated",
+          "hazard_indicated"
+        ],
+        "life_threat": true,
+        "location_unresolvable": true
+      }
+    },
+    {
+      "id": "third-party-report",
+      "tests": "A bystander reporting something they saw at a distance, with genuine uncertainty. Confidence should reflect that rather than sounding decisive.",
+      "tags": [
+        "caller-role",
+        "uncertainty"
+      ],
+      "channel": "whatsapp",
+      "utterances": [
+        {
+          "text": "main door se dekh raha hoon, lagta hai kisi ko maara gaya hai"
+        },
+        {
+          "text": "pakka nahi hoon, bhaag-daud ho rahi hai wahan"
+        }
+      ],
+      "expect": {
+        "incident_type": "crime_assault",
+        "acceptable_types": [
+          "unclear",
+          "other"
+        ],
+        "priority": "P1_urgent",
+        "acceptable_priorities": [
+          "P2_prompt",
+          "unclear"
+        ],
+        "required_agencies": [
+          "police"
+        ],
+        "life_threat": false,
+        "location_unresolvable": true
+      }
+    },
+    {
+      "id": "code-switch-heavy",
+      "tests": "Dense code-switching within single sentences, which is the normal register rather than an edge case.",
+      "tags": [
+        "hinglish",
+        "language"
+      ],
+      "channel": "whatsapp",
+      "utterances": [
+        {
+          "text": "yaar there's been a major accident on the ORR near Gachibowli exit"
+        },
+        {
+          "text": "ek truck ne car ko hit kiya, driver stuck hai inside, blood bahut hai"
+        }
+      ],
+      "expect": {
+        "incident_type": "road_traffic_accident",
+        "priority": "P0_immediate",
+        "acceptable_priorities": [
+          "P1_urgent"
+        ],
+        "required_agencies": [
+          "health"
+        ],
+        "required_escalations": [
+          "life_threat_indicated"
+        ],
+        "life_threat": true,
+        "must_preserve": [
+          "ORR",
+          "Gachibowli"
+        ],
+        "location_unresolvable": true
+      }
+    }
+  ]
+}

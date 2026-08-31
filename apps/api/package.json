@@ -1,0 +1,36 @@
+{
+  "name": "@resqai/api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/copy-sql.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "migrate": "node --env-file-if-exists=.env dist/db/migrate-cli.js",
+    "test": "npm run build && node --test --test-concurrency=1 dist/",
+    "db:check": "node --env-file-if-exists=.env dist/db/doctor.js",
+    "db:smoke": "node --env-file-if-exists=.env dist/db/smoke.js",
+    "start": "node --env-file-if-exists=.env dist/index.js",
+    "dev": "node --env-file-if-exists=.env --watch dist/index.js",
+    "extraction:probe": "node --env-file-if-exists=.env dist/extraction/probe.js",
+    "db:seed-units": "node --env-file-if-exists=.env dist/db/seed-units.js",
+    "eval": "node --env-file-if-exists=.env dist/eval/run.js",
+    "retention": "node --env-file-if-exists=.env dist/retention/cli.js",
+    "operators": "node --env-file-if-exists=.env dist/auth/cli.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.122.0",
+    "@fastify/cors": "^11.3.0",
+    "@resqai/schema": "*",
+    "fastify": "^5.12.1",
+    "pg": "^8.13.1",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.2.17",
+    "@types/node": "^26.4.0",
+    "@types/pg": "^8.11.10",
+    "typescript": "^5.6.0"
+  }
+}
